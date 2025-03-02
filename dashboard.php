@@ -4,7 +4,6 @@ require 'includes/auth.php';
 
 redirectIfNotLoggedIn();
 
-// Proses tambah komentar
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['meme_id'], $_POST['content'])) {
     $meme_id = (int)$_POST['meme_id'];
     $content = trim($_POST['content']);
@@ -17,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['meme_id'], $_POST['co
     exit();
 }
 
-// Proses vote (upvote/downvote)
 $meme_id = (int)($_GET['id'] ?? 0);
 $type = $_GET['type'] ?? '';
 
@@ -36,7 +34,6 @@ if (in_array($type, ['upvote', 'downvote'], true)) {
     }
 }
 
-// Fetch memes with user details and vote counts
 $stmt = $pdo->query("
     SELECT memes.*, 
            users.username, 
@@ -49,7 +46,6 @@ $stmt = $pdo->query("
 ");
 $memes = $stmt->fetchAll();
 
-// Fetch comments (will be loaded dynamically via modal)
 $stmt = $pdo->prepare("SELECT comments.*, users.username, users.avatar 
                        FROM comments 
                        JOIN users ON comments.user_id = users.id 
@@ -119,7 +115,6 @@ require 'templates/header.php';
     <?php endif; ?>
 </div>
 
-<!-- Modal Komentar -->
 <div id="commentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
     <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Tambah Komentar</h2>
@@ -143,7 +138,6 @@ require 'templates/header.php';
         <div class="mt-6">
             <h3 class="text-lg font-semibold text-gray-700 mb-2">Komentar:</h3>
             <ul id="comments-list">
-                <!-- Komentar akan dimuat secara dinamis -->
             </ul>
         </div>
     </div>
