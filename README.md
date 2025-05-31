@@ -1,3 +1,3 @@
 # LokalKu
 
-LokalKu adalah komunitas meme Indonesia yang dibuat 27 Desember 2024.
+LokalKu adalah sebuah perangkat lunak untuk membuat sebuah website berbagi meme yang dibuat 27 Desember 2024.
