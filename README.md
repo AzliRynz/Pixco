@@ -69,7 +69,7 @@ ALTER TABLE users ADD COLUMN avatar VARCHAR(255) DEFAULT NULL;
 ## 📁 Project Structure
 
 ```
-LokalKu/
+Pixco/
 ├── index.php                    # Home page / Dashboard
 ├── admin.php                    # Admin dashboard
 ├── dashboard.php                # Modern meme feed
@@ -128,7 +128,7 @@ LokalKu/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd LokalKu
+   cd Pixco
    ```
 
 2. **Install dependencies**
@@ -139,8 +139,8 @@ LokalKu/
 3. **Database setup**
    ```sql
    -- Create database
-   CREATE DATABASE lokalku;
-   USE lokalku;
+   CREATE DATABASE Pixco;
+   USE Pixco;
    
    -- Run schema from templates/mysql.sql
    SOURCE templates/mysql.sql;

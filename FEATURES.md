@@ -1,6 +1,6 @@
 # 🎉 Pixco - Feature Documentation
 
-A modern platform for sharing local memes with a vibrant community. This document provides comprehensive information about all features available in LokalKu.
+A modern platform for sharing local memes with a vibrant community. This document provides comprehensive information about all features available in Pixco.
 
 ## ✨ Main Features
 

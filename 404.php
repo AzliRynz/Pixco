@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/templates/header.php';
 ?>
-<title>404 Not Found - LokalKu</title>
+<title>404 Not Found - Pixco</title>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
   <div class="text-center">
     <h1 class="text-6xl font-bold text-gray-800">404 Not Found</h1>

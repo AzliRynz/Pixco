@@ -9,7 +9,7 @@ return [
     'nav_logout' => 'Keluar',
     'nav_login' => 'Masuk',
     'nav_register' => 'Daftar',
-    'brand_name' => 'LokalKu',
+    'brand_name' => 'Pixco',
 
     'welcome' => 'Selamat Datang',
     'dashboard' => 'Dashboard',

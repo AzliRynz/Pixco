@@ -9,7 +9,7 @@ return [
     'nav_logout' => 'Logout',
     'nav_login' => 'Login',
     'nav_register' => 'Register',
-    'brand_name' => 'LokalKu',
+    'brand_name' => 'Pixco',
 
     'welcome' => 'Welcome',
     'dashboard' => 'Dashboard',

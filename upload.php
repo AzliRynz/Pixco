@@ -48,7 +48,7 @@ require 'templates/header.php';
             <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
                 <i class="fas fa-images text-blue-600 mr-3"></i><?= t('upload_title') ?>
             </h1>
-            <p class="text-gray-600">Bagikan meme terbaik Anda dengan komunitas LokalKu</p>
+            <p class="text-gray-600">Bagikan meme terbaik Anda dengan komunitas Pixco</p>
         </div>
 
         <?php if ($error): ?>

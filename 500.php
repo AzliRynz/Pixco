@@ -1,6 +1,6 @@
 <?php require_once __DIR__ . '/templates/header.php'; ?>
 
-<title>500 Internal Server Erorr - LokalKu</title>
+<title>500 Internal Server Erorr - Pixco</title>
 <div class="flex items-center justify-center min-h-screen">
     <div class="text-center">
         <h1 class="text-8xl font-bold text-red-500">500</h1>

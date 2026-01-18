@@ -139,7 +139,7 @@ UPDATE users SET role = 'admin' WHERE id = 1;
 #### 3.1 Navbar (Desktop)
 - [ ] Navigate to any page
 - [ ] Navbar shows:
-  - [ ] LokalKu logo with smile icon
+  - [ ] Pixco logo with smile icon
   - [ ] Gradient blue background
   - [ ] Navigation links (Leaderboard, Upload, Profile, etc)
   - [ ] Language switcher (globe icon)
@@ -158,7 +158,7 @@ UPDATE users SET role = 'admin' WHERE id = 1;
 - [ ] Footer shows:
   - [ ] Gradient background
   - [ ] Column layout (3 columns on desktop, 1 on mobile)
-  - [ ] LokalKu branding
+  - [ ] Pixco branding
   - [ ] Navigation links
   - [ ] Social media icons
   - [ ] Copyright text
@@ -187,7 +187,7 @@ UPDATE users SET role = 'admin' WHERE id = 1;
 #### 3.7 Login Form
 - [ ] Navigate to /login
 - [ ] Form shows:
-  - [ ] LokalKu logo centered
+  - [ ] Pixco logo centered
   - [ ] Gradient background
   - [ ] Modern input fields with icons
   - [ ] Gradient submit button

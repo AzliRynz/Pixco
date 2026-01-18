@@ -4,7 +4,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div>
                     <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
-                        <i class="fas fa-smile text-blue-400"></i> LokalKu
+                        <i class="fas fa-smile text-blue-400"></i> Pixco
                     </h3>
                     <p class="text-gray-400 text-sm">Platform berbagi meme lokal terbaik di Indonesia</p>
                 </div>
@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-700 pt-8 text-center">
-                <p class="text-gray-400 text-sm">&copy; <?= date('Y') ?> LokalKu. All rights reserved.</p>
+                <p class="text-gray-400 text-sm">&copy; <?= date('Y') ?> Pixco. All rights reserved.</p>
             </div>
         </div>
     </footer>

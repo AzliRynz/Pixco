@@ -1,6 +1,6 @@
-# ⚡ Quick Start Guide - LokalKu 1.0
+# ⚡ Quick Start Guide - Pixco 1.0
 
-Get up and running with LokalKu in just 5 minutes!
+Get up and running with Pixco in just 5 minutes!
 
 ## 🚀 5-Minute Setup
 
@@ -81,7 +81,7 @@ The admin panel provides three main sections:
 ## 📂 File Structure Reference
 
 ```
-LokalKu/
+Pixco/
 ├── admin.php                      ← Admin dashboard page
 ├── dashboard.php                  ← Main meme feed (modern cards)
 ├── login.php, register.php        ← Modern authentication forms
@@ -318,7 +318,7 @@ After completing the quick start setup:
 
 ## 🎉 You're Ready!
 
-LokalKu 1.0 is now ready to use with:
+Pixco 1.0 is now ready to use with:
 
 - ✅ Multi-language support (English, Indonesian)
 - ✅ Fully functional admin panel

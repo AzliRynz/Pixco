@@ -53,7 +53,7 @@ $stmt = $pdo->prepare("SELECT comments.*, users.username, users.avatar
                        WHERE comments.meme_id = ?");
 require 'templates/header.php';
 ?>
-<title><?= t('dashboard') ?> - LokalKu</title>
+<title><?= t('dashboard') ?> - Pixco</title>
 <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2"><?= t('dashboard') ?></h1>
 <p class="text-gray-600 mb-8 text-lg">Temukan meme terbaik dari komunitas lokal</p>
 

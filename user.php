@@ -41,7 +41,7 @@ if ($meme_id && in_array($type, ['upvote', 'downvote'], true)) {
 require_once __DIR__ . '/templates/header.php';
 ?>
 
-<title><?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?> - LokalKu</title>
+<title><?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?> - Pixco</title>
 
 <div class="min-h-screen py-12 px-4">
     <div class="container mx-auto max-w-4xl">
