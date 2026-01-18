@@ -1,72 +1,128 @@
+<?php require_once 'includes/i18n.php'; ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= getLang() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
     <style>
-        /* Pastikan menu mobile tersembunyi secara default */
         #mobile-menu {
             display: none;
         }
-
-        .logo {
-          width: 150px;
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link:hover {
+            color: #fbbf24;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background-color: #fbbf24;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after {
+            width: 100%;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <nav class="bg-blue-600 p-4 text-white">
-        <div class="container mx-auto flex justify-between items-center">
-            <a href="/" class="text-2xl font-bold"><i class="fas fa-smile"></i> LokalKu</a>
-            
-            <!-- Tombol Hamburger untuk Mobile -->
-            <div class="lg:hidden">
-                <button id="hamburger" class="text-white focus:outline-none">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100">
+    <nav class="bg-white shadow-md border-b-2 border-blue-500 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent flex items-center gap-2">
+                    <i class="fas fa-smile text-blue-600"></i> <?= t('brand_name') ?>
+                </a>
+                
+                <div class="lg:hidden">
+                    <button id="hamburger" class="text-gray-700 hover:text-blue-600 transition focus:outline-none">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
 
-            <!-- Menu Navigasi untuk Desktop -->
-            <div class="hidden lg:flex items-center space-x-6" id="menu">
-                <a href="/leaderboard" class="hover:underline">Leaderboard</a>
-                <?php if (isLoggedIn()): ?>
-                    <a href="/upload" class="hover:underline">Upload Meme</a>
-                    <a href="/user/<?= $_SESSION['user_id'] ?>" class="hover:underline">Profil</a>
-                    <?php if (isAdmin()): ?>
-                        <a href="/admin" class="hover:underline">Admin Panel</a>
+                <div class="hidden lg:flex items-center space-x-8" id="menu">
+                    <a href="/leaderboard" class="nav-link text-gray-700 font-medium"><?= t('nav_leaderboard') ?></a>
+                    <?php if (isLoggedIn()): ?>
+                        <a href="/upload" class="nav-link text-gray-700 font-medium"><?= t('nav_upload') ?></a>
+                        <a href="/user/<?= $_SESSION['user_id'] ?>" class="nav-link text-gray-700 font-medium"><?= t('nav_profile') ?></a>
+                        <?php if (isAdmin()): ?>
+                            <a href="/admin" class="nav-link text-gray-700 font-medium text-orange-600"><?= t('nav_admin') ?></a>
+                        <?php endif; ?>
+                        <a href="/settings" class="nav-link text-gray-700 font-medium"><?= t('nav_settings') ?></a>
+                        <div class="relative group">
+                            <button class="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium">
+                                <i class="fas fa-globe"></i>
+                                <span><?= strtoupper(getLang()) ?></span>
+                            </button>
+                            <div class="hidden group-hover:block absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                <a href="?lang=en" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 text-sm">English</a>
+                                <a href="?lang=id" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 text-sm">Indonesia</a>
+                            </div>
+                        </div>
+                        <a href="/logout" class="nav-link text-red-600 font-medium"><?= t('nav_logout') ?></a>
+                    <?php else: ?>
+                        <a href="/login" class="nav-link text-gray-700 font-medium"><?= t('nav_login') ?></a>
+                        <a href="/register" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"><?= t('nav_register') ?></a>
+                        <div class="relative group">
+                            <button class="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-medium">
+                                <i class="fas fa-globe"></i>
+                                <span><?= strtoupper(getLang()) ?></span>
+                            </button>
+                            <div class="hidden group-hover:block absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                <a href="?lang=en" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 text-sm">English</a>
+                                <a href="?lang=id" class="block px-4 py-2 text-gray-700 hover:bg-blue-50 text-sm">Indonesia</a>
+                            </div>
+                        </div>
                     <?php endif; ?>
-                    <a href="/settings" class="hover:underline">Pengaturan</a>
-                    <a href="/logout" class="hover:underline">Keluar</a>
-                <?php else: ?>
-                    <a href="/login" class="hover:underline">Masuk</a>
-                    <a href="/register" class="hover:underline">Daftar</a>
-                <?php endif; ?>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Menu Mobile -->
-    <div class="lg:hidden" id="mobile-menu">
-        <div class="px-4 py-2 bg-blue-600">
-            <a href="/leaderboard" class="block py-2 px-4 text-white hover:bg-blue-700">Leaderboard</a>
+    <div class="lg:hidden bg-white border-b border-gray-200 shadow-md" id="mobile-menu">
+        <div class="container mx-auto px-4 py-4 space-y-2">
+            <a href="/leaderboard" class="block py-2 px-4 text-gray-700 hover:bg-blue-50 rounded-lg transition"><?= t('nav_leaderboard') ?></a>
             <?php if (isLoggedIn()): ?>
-                <a href="/upload" class="block py-2 px-4 text-white hover:bg-blue-700">Upload Meme</a>
-                <a href="/user/<?= $_SESSION['user_id'] ?>" class="block py-2 px-4 text-white hover:bg-blue-700">Profil</a>
+                <a href="/upload" class="block py-2 px-4 text-gray-700 hover:bg-blue-50 rounded-lg transition"><?= t('nav_upload') ?></a>
+                <a href="/user/<?= $_SESSION['user_id'] ?>" class="block py-2 px-4 text-gray-700 hover:bg-blue-50 rounded-lg transition"><?= t('nav_profile') ?></a>
                 <?php if (isAdmin()): ?>
-                    <a href="/admin" class="block py-2 px-4 text-white hover:bg-blue-700">Admin Panel</a>
+                    <a href="/admin" class="block py-2 px-4 text-orange-600 hover:bg-orange-50 rounded-lg transition font-medium"><?= t('nav_admin') ?></a>
                 <?php endif; ?>
-                <a href="/settings" class="block py-2 px-4 text-white hover:bg-blue-700">Pengaturan</a>
-                <a href="/logout" class="block py-2 px-4 text-white hover:bg-blue-700">Keluar</a>
+                <a href="/settings" class="block py-2 px-4 text-gray-700 hover:bg-blue-50 rounded-lg transition"><?= t('nav_settings') ?></a>
+                <div class="py-2 px-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?= t('settings_language') ?></label>
+                    <div class="flex gap-2">
+                        <a href="?lang=en" class="flex-1 px-3 py-2 text-center text-sm <?= getLang() === 'en' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' ?> rounded-lg transition">EN</a>
+                        <a href="?lang=id" class="flex-1 px-3 py-2 text-center text-sm <?= getLang() === 'id' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' ?> rounded-lg transition">ID</a>
+                    </div>
+                </div>
+                <a href="/logout" class="block py-2 px-4 text-red-600 hover:bg-red-50 rounded-lg transition font-medium"><?= t('nav_logout') ?></a>
             <?php else: ?>
-                <a href="/login" class="block py-2 px-4 text-white hover:bg-blue-700">Masuk</a>
-                <a href="/register" class="block py-2 px-4 text-white hover:bg-blue-700">Daftar</a>
+                <a href="/login" class="block py-2 px-4 text-gray-700 hover:bg-blue-50 rounded-lg transition"><?= t('nav_login') ?></a>
+                <a href="/register" class="block py-2 px-4 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition text-center"><?= t('nav_register') ?></a>
+                <div class="py-2 px-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2"><?= t('settings_language') ?></label>
+                    <div class="flex gap-2">
+                        <a href="?lang=en" class="flex-1 px-3 py-2 text-center text-sm <?= getLang() === 'en' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' ?> rounded-lg transition">EN</a>
+                        <a href="?lang=id" class="flex-1 px-3 py-2 text-center text-sm <?= getLang() === 'id' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' ?> rounded-lg transition">ID</a>
+                    </div>
+                </div>
             <?php endif; ?>
         </div>
     </div>
-    <script>const _0x4cdd9b=_0x567c;function _0x46a1(){const _0x4c3feb=['490vWQkGk','5761120moeyLZ','style','1055549iMOuGY','display','log','33165UoqbCQ','315909bIPYkY','block','addEventListener','mobile-menu','240776jqlbwb','841842ypTQty','getElementById','4ApEAlA','50NrVpyJ','8844654IWVfQd','click','Hello\x20World!','none','hamburger','1000aSokmK'];_0x46a1=function(){return _0x4c3feb;};return _0x46a1();}(function(_0x2f61b5,_0x35c514){const _0x3fed2c=_0x567c,_0xc6e0bf=_0x2f61b5();while(!![]){try{const _0x2b1a21=-parseInt(_0x3fed2c(0x15a))/0x1*(-parseInt(_0x3fed2c(0x157))/0x2)+parseInt(_0x3fed2c(0x153))/0x3+-parseInt(_0x3fed2c(0x163))/0x4+parseInt(_0x3fed2c(0x15b))/0x5*(-parseInt(_0x3fed2c(0x158))/0x6)+-parseInt(_0x3fed2c(0x15c))/0x7+-parseInt(_0x3fed2c(0x161))/0x8*(parseInt(_0x3fed2c(0x168))/0x9)+-parseInt(_0x3fed2c(0x162))/0xa*(-parseInt(_0x3fed2c(0x165))/0xb);if(_0x2b1a21===_0x35c514)break;else _0xc6e0bf['push'](_0xc6e0bf['shift']());}catch(_0x2ffd83){_0xc6e0bf['push'](_0xc6e0bf['shift']());}}}(_0x46a1,0xb01c5));function hi(){const _0x35268d=_0x567c;console[_0x35268d(0x167)](_0x35268d(0x15e));}function _0x567c(_0x256f84,_0x73fc2a){const _0x46a1f0=_0x46a1();return _0x567c=function(_0x567c17,_0x1d9953){_0x567c17=_0x567c17-0x153;let _0x1c0f45=_0x46a1f0[_0x567c17];return _0x1c0f45;},_0x567c(_0x256f84,_0x73fc2a);}hi();const hamburger=document[_0x4cdd9b(0x159)](_0x4cdd9b(0x160)),menu=document[_0x4cdd9b(0x159)](_0x4cdd9b(0x156));hamburger[_0x4cdd9b(0x155)](_0x4cdd9b(0x15d),()=>{const _0x395a67=_0x4cdd9b;menu[_0x395a67(0x164)][_0x395a67(0x166)]===_0x395a67(0x154)?menu[_0x395a67(0x164)]['display']=_0x395a67(0x15f):menu['style'][_0x395a67(0x166)]='block';});
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const menu = document.getElementById('mobile-menu');
+        hamburger.addEventListener('click', () => {
+            menu.style.display = menu.style.display === 'none' || menu.style.display === '' ? 'block' : 'none';
+        });
     </script>
-    <div class="container mx-auto my-8">
+    <div class="container mx-auto my-8 px-4">
