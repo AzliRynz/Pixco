@@ -1,8 +1,8 @@
-# LokalKu - Local Meme Sharing Platform
+# Pixco - Local Meme Sharing Platform
 
-**LokalKu** is a modern web application designed for sharing local memes with an interactive community. Built with a focus on user experience, the platform features multi-language support, an admin panel, and a modern, responsive interface.
+**Pixco** is a modern web application designed for sharing local memes with an interactive community. Built with a focus on user experience, the platform features multi-language support, an admin panel, and a modern, responsive interface.
 
-**Project Created**: December 27, 2024
+**Project Created**: December 27, 2024 (LokalKu)
 
 ## 🌟 Key Features
 
@@ -281,6 +281,5 @@ This project is licensed under the MIT License. See LICENSE file for details.
 
 ---
 
-**Version**: 2.0  
-**Last Updated**: January 2026  
+**Version**: 1.0
 **Status**: Active Development
