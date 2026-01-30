@@ -3,41 +3,65 @@ require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
 require 'includes/config.php';
+require 'includes/security.php';
 
 redirectIfNotLoggedIn();
 redirectIfNotAdmin();
 
 $action = $_GET['action'] ?? 'dashboard';
+$settingsMessage = null;
+$settingsError = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action'])) {
+    // Verify CSRF token
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        $settingsError = 'Invalid security token. Please try again.';
+    } elseif (isset($_POST['action'])) {
         $postAction = $_POST['action'];
         
         if ($postAction === 'save_settings') {
-            $siteName = trim($_POST['site_name'] ?? '');
-            $defaultLanguage = $_POST['default_language'] ?? 'id';
-            
-            if ($siteName && in_array($defaultLanguage, ['en', 'id'])) {
+            try {
+                $siteName = trim($_POST['site_name'] ?? '');
+                $defaultLanguage = $_POST['default_language'] ?? 'id';
+                
+                if (!$siteName) {
+                    throw new Exception(t('admin_site_name_required'));
+                }
+                
                 setConfig('site_name', $siteName);
                 setConfig('default_language', $defaultLanguage);
                 $settingsMessage = t('admin_settings_saved');
+            } catch (Exception $e) {
+                $settingsError = $e->getMessage();
             }
         } elseif ($postAction === 'ban_user') {
             $userId = (int)$_POST['user_id'];
-            $stmt = $pdo->prepare("UPDATE users SET is_banned = TRUE WHERE id = ? AND id != ?");
-            $stmt->execute([$userId, $_SESSION['user_id']]);
+            if ($userId === $_SESSION['user_id']) {
+                $settingsError = 'You cannot ban yourself';
+            } else {
+                $stmt = $pdo->prepare("UPDATE users SET is_banned = TRUE WHERE id = ? AND id != ?");
+                $stmt->execute([$userId, $_SESSION['user_id']]);
+            }
         } elseif ($postAction === 'unban_user') {
             $userId = (int)$_POST['user_id'];
             $stmt = $pdo->prepare("UPDATE users SET is_banned = FALSE WHERE id = ?");
             $stmt->execute([$userId]);
         } elseif ($postAction === 'make_admin') {
             $userId = (int)$_POST['user_id'];
-            $stmt = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ? AND id != ?");
-            $stmt->execute([$userId, $_SESSION['user_id']]);
+            if ($userId === $_SESSION['user_id']) {
+                $settingsError = 'You cannot modify your own role';
+            } else {
+                $stmt = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ? AND id != ?");
+                $stmt->execute([$userId, $_SESSION['user_id']]);
+            }
         } elseif ($postAction === 'remove_admin') {
             $userId = (int)$_POST['user_id'];
-            $stmt = $pdo->prepare("UPDATE users SET role = 'user' WHERE id = ? AND id != ?");
-            $stmt->execute([$userId, $_SESSION['user_id']]);
+            if ($userId === $_SESSION['user_id']) {
+                $settingsError = 'You cannot modify your own role';
+            } else {
+                $stmt = $pdo->prepare("UPDATE users SET role = 'user' WHERE id = ? AND id != ?");
+                $stmt->execute([$userId, $_SESSION['user_id']]);
+            }
         } elseif ($postAction === 'delete_meme') {
             $memeId = (int)$_POST['meme_id'];
             $stmt = $pdo->prepare("DELETE FROM memes WHERE id = ?");
@@ -298,8 +322,18 @@ require 'templates/header.php';
                     </div>
                 <?php endif; ?>
 
+                <?php if (isset($settingsError)): ?>
+                    <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-600 rounded-lg">
+                        <p class="text-red-700 flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <?= $settingsError ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
                 <form method="POST" class="space-y-6">
                     <input type="hidden" name="action" value="save_settings">
+                    <?= csrfTokenInput() ?>
 
                     <div>
                         <label for="site_name" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -312,6 +346,8 @@ require 'templates/header.php';
                             value="<?= htmlspecialchars(getSiteName()) ?>"
                             class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                             placeholder="Pixco"
+                            minlength="1"
+                            maxlength="50"
                             required
                         >
                         <p class="text-gray-500 text-xs mt-1"><?= t('admin_site_name_hint') ?></p>

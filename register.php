@@ -3,40 +3,70 @@ require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
 require 'includes/config.php';
+require 'includes/security.php';
+
+if (isLoggedIn()) {
+    header('Location: /dashboard');
+    exit();
+}
 
 $error = '';
 $success = '';
+$isRateLimited = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    $confirmPassword = $_POST['confirm_password'];
-
-    // Validation
-    if (strlen($username) < 3) {
-        $error = t('register_username_min');
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = t('register_email_invalid');
-    } elseif (strlen($password) < 6) {
-        $error = t('register_password_min');
-    } elseif ($password !== $confirmPassword) {
-        $error = t('register_password_mismatch');
+    // Verify CSRF token
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        $error = 'Invalid security token. Please try again.';
     } else {
-        try {
-            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')");
-            $stmt->execute([$username, $email, $passwordHash]);
-            
-            $success = t('register_success');
-            header('refresh:2; url=login');
-        } catch (PDOException $e) {
-            if (strpos($e->getMessage(), 'username') !== false) {
-                $error = t('register_username_taken');
-            } elseif (strpos($e->getMessage(), 'email') !== false) {
-                $error = t('register_email_taken');
+        // Check rate limit for registration
+        if (!checkRateLimit('register_' . $_SERVER['REMOTE_ADDR'], 3, 3600)) {
+            $isRateLimited = true;
+            $error = 'Too many registration attempts from your IP. Please try again later.';
+        } else {
+            $username = sanitizeInput($_POST['username'] ?? '');
+            $email = sanitizeInput($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+            $confirmPassword = $_POST['confirm_password'] ?? '';
+
+            // Validation
+            if (strlen($username) < 3) {
+                $error = t('register_username_min');
+            } elseif (strlen($username) > 30) {
+                $error = 'Username must not exceed 30 characters';
+            } elseif (!isValidEmail($email)) {
+                $error = t('register_email_invalid');
+            } elseif (strlen($password) < 8) {
+                $error = 'Password must be at least 8 characters';
+            } elseif ($password !== $confirmPassword) {
+                $error = t('register_password_mismatch');
             } else {
-                $error = t('register_error_default');
+                try {
+                    // Check if username/email already exists
+                    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+                    $stmt->execute([$username, $email]);
+                    $existingUser = $stmt->fetch();
+
+                    if ($existingUser) {
+                        // Check which one exists
+                        $stmt = $pdo->prepare("SELECT id FROM users WHERE username = ?");
+                        $stmt->execute([$username]);
+                        if ($stmt->fetch()) {
+                            $error = t('register_username_taken');
+                        } else {
+                            $error = t('register_email_taken');
+                        }
+                    } else {
+                        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')");
+                        $stmt->execute([$username, $email, $passwordHash]);
+                        
+                        $success = t('register_success');
+                        header('refresh:2; url=login');
+                    }
+                } catch (PDOException $e) {
+                    $error = t('register_error_default');
+                }
             }
         }
     }
@@ -44,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require 'templates/header.php';
 ?>
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-12 px-4">
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center gap-2 mb-4">
@@ -71,8 +101,19 @@ require 'templates/header.php';
                 </p>
             </div>
         <?php endif; ?>
+
+        <?php if ($isRateLimited): ?>
+            <div class="mb-6 p-4 bg-orange-50 border-l-4 border-orange-600 rounded-lg">
+                <p class="text-orange-700 text-sm flex items-center gap-2">
+                    <i class="fas fa-clock"></i>
+                    <?= t('too_many_attempts') ?>
+                </p>
+            </div>
+        <?php endif; ?>
         
         <form method="POST" class="bg-white shadow-2xl rounded-xl p-8 space-y-6">
+            <?= csrfTokenInput() ?>
+            
             <div>
                 <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
                     <i class="fas fa-user mr-2 text-blue-600"></i><?= t('register_username') ?>
@@ -84,7 +125,9 @@ require 'templates/header.php';
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" 
                     placeholder="<?= t('register_username') ?>"
                     minlength="3"
+                    maxlength="30"
                     required
+                    <?php if ($isRateLimited): ?>disabled<?php endif; ?>
                 >
                 <p class="text-gray-500 text-xs mt-1"><?= t('register_min_username_hint') ?></p>
             </div>
@@ -100,6 +143,7 @@ require 'templates/header.php';
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" 
                     placeholder="email@example.com"
                     required
+                    <?php if ($isRateLimited): ?>disabled<?php endif; ?>
                 >
             </div>
 
@@ -113,8 +157,9 @@ require 'templates/header.php';
                     id="password"
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" 
                     placeholder="<?= t('register_password') ?>"
-                    minlength="6"
+                    minlength="8"
                     required
+                    <?php if ($isRateLimited): ?>disabled<?php endif; ?>
                 >
                 <p class="text-gray-500 text-xs mt-1"><?= t('register_min_password_hint') ?></p>
             </div>
@@ -129,15 +174,17 @@ require 'templates/header.php';
                     id="confirm_password"
                     class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" 
                     placeholder="<?= t('register_confirm_password') ?>"
-                    minlength="6"
+                    minlength="8"
                     required
+                    <?php if ($isRateLimited): ?>disabled<?php endif; ?>
                 >
             </div>
 
             <div>
                 <button 
                     type="submit" 
-                    class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-900 transition duration-300 transform hover:scale-105">
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-900 transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    <?php if ($isRateLimited): ?>disabled<?php endif; ?>>
                     <i class="fas fa-user-plus mr-2"></i><?= t('register_submit') ?>
                 </button>
             </div>
