@@ -1,6 +1,9 @@
 <?php
 require 'includes/db.php';
 require 'includes/auth.php';
+require 'includes/i18n.php';
+require 'includes/config.php';
+require 'includes/security.php';
 require 'vendor/autoload.php';
 
 if (isLoggedIn()) {
@@ -9,70 +12,145 @@ if (isLoggedIn()) {
 }
 
 $error = '';
+$loginAttempts = 0;
+$isRateLimited = false;
 
-// Login manual menggunakan username dan password
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
-
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['avatar'] = $user['avatar']; // Ambil avatar dari database
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['login_method'] = 'manual';
-        header('Location: /dashboard');
-        exit();
+    // Verify CSRF token
+    if (!isset($_POST['csrf_token']) || !verifyCSRFToken($_POST['csrf_token'])) {
+        $error = 'Invalid security token. Please try again.';
     } else {
-        $error = 'Username atau password salah.';
+        // Check rate limit
+        if (!checkRateLimit('login_' . $_SERVER['REMOTE_ADDR'], 5, 300)) {
+            $isRateLimited = true;
+            $error = 'Too many login attempts. Please try again in 5 minutes.';
+        } else {
+            $username = sanitizeInput($_POST['username'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($username) || empty($password)) {
+                $error = 'Username and password are required';
+            } else {
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
+                $stmt->execute([$username]);
+                $user = $stmt->fetch();
+
+                if ($user && !$user['is_banned'] && password_verify($password, $user['password'])) {
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['avatar'] = $user['avatar'];
+                    $_SESSION['role'] = $user['role'];
+                    $_SESSION['login_method'] = 'manual';
+                    
+                    // Reset rate limit on successful login
+                    $_SESSION['rate_limit_login_' . $_SERVER['REMOTE_ADDR']] = ['attempts' => 0, 'first_attempt' => time()];
+                    
+                    header('Location: /dashboard');
+                    exit();
+                } else {
+                    $error = t('login_error');
+                }
+            }
+        }
     }
 }
 
 require 'templates/header.php';
 ?>
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-center mb-6">Masuk</h1>
-    
-    <?php if ($error): ?>
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6" role="alert">
-            <?= htmlspecialchars($error) ?>
-        </div>
-    <?php endif; ?>
-    
-    <form method="POST" class="max-w-md mx-auto bg-white shadow-lg rounded-lg px-8 py-6">
-        <div class="mb-4">
-            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-            <input 
-                type="text" 
-                name="username" 
-                id="username"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                required
-            >
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-12 px-4">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center gap-2 mb-4">
+                <div class="text-5xl text-blue-600"><i class="fas fa-smile"></i></div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"><?= getSiteName() ?></h1>
+            </div>
+            <p class="text-gray-600"><?= t('login_title') ?> <?= t('login_share_meme') ?></p>
         </div>
 
-        <div class="mb-4">
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input 
-                type="password" 
-                name="password" 
-                id="password"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                required
-            >
-        </div>
+        <?php if ($error): ?>
+            <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-600 rounded-lg">
+                <p class="text-red-700 flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?= htmlspecialchars($error) ?>
+                </p>
+            </div>
+        <?php endif; ?>
 
-        <div class="mb-4">
-            <button 
-                type="submit" 
-                class="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300">
-                Masuk
-            </button>
+        <?php if ($isRateLimited): ?>
+            <div class="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-600 rounded-lg">
+                <p class="text-yellow-700 flex items-center gap-2">
+                    <i class="fas fa-clock"></i>
+                    Too many login attempts. Please wait a few minutes before trying again.
+                </p>
+            </div>
+        <?php endif; ?>
+        
+        <form method="POST" class="bg-white shadow-2xl rounded-xl p-8 space-y-6">
+            <?= csrfTokenInput() ?>
+
+            <div>
+                <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-user mr-2 text-blue-600"></i><?= t('login_username') ?>
+                </label>
+                <input 
+                    type="text" 
+                    name="username" 
+                    id="username"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" 
+                    placeholder="<?= t('login_username') ?>"
+                    minlength="3"
+                    required
+                    <?= $isRateLimited ? 'disabled' : '' ?>
+                >
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-lock mr-2 text-blue-600"></i><?= t('login_password') ?>
+                </label>
+                <input 
+                    type="password" 
+                    name="password" 
+                    id="password"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition" 
+                    placeholder="<?= t('login_password') ?>"
+                    required
+                    <?= $isRateLimited ? 'disabled' : '' ?>
+                >
+            </div>
+
+            <div>
+                <button 
+                    type="submit" 
+                    <?= $isRateLimited ? 'disabled' : '' ?>
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold py-3 px-4 rounded-lg hover:from-blue-700 hover:to-blue-900 transition duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-sign-in-alt mr-2"></i><?= t('login_submit') ?>
+                </button>
+            </div>
+
+            <div class="flex items-center my-6">
+                <div class="flex-1 border-t-2 border-gray-200"></div>
+                <div class="px-3 text-gray-500 text-sm">or</div>
+                <div class="flex-1 border-t-2 border-gray-200"></div>
+            </div>
+
+            <div class="text-center">
+                <p class="text-gray-600 text-sm">
+                    <?= t('login_no_account') ?>
+                    <a href="/register" class="text-blue-600 font-semibold hover:text-blue-800 transition">
+                        <?= t('login_register') ?>
+                    </a>
+                </p>
+            </div>
+        </form>
+
+        <div class="mt-8 p-4 bg-blue-50 border-l-4 border-blue-600 rounded-lg">
+            <p class="text-blue-700 text-sm flex items-start gap-2">
+                <i class="fas fa-info-circle mt-1"></i>
+                <span><?= t('login_platform_desc') ?></span>
+            </p>
         </div>
-    </form>
+    </div>
 </div>
+
 <?php require 'templates/footer.php'; ?>
