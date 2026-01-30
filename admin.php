@@ -2,18 +2,27 @@
 require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
+require 'includes/config.php';
 
 redirectIfNotLoggedIn();
 redirectIfNotAdmin();
 
 $action = $_GET['action'] ?? 'dashboard';
 
-// Handle user actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $postAction = $_POST['action'];
         
-        if ($postAction === 'ban_user') {
+        if ($postAction === 'save_settings') {
+            $siteName = trim($_POST['site_name'] ?? '');
+            $defaultLanguage = $_POST['default_language'] ?? 'id';
+            
+            if ($siteName && in_array($defaultLanguage, ['en', 'id'])) {
+                setConfig('site_name', $siteName);
+                setConfig('default_language', $defaultLanguage);
+                $settingsMessage = t('admin_settings_saved');
+            }
+        } elseif ($postAction === 'ban_user') {
             $userId = (int)$_POST['user_id'];
             $stmt = $pdo->prepare("UPDATE users SET is_banned = TRUE WHERE id = ? AND id != ?");
             $stmt->execute([$userId, $_SESSION['user_id']]);
@@ -57,6 +66,9 @@ require 'templates/header.php';
             <a href="/admin?action=memes" class="px-6 py-2 <?= $action === 'memes' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300' ?> rounded-lg hover:bg-blue-600 hover:text-white transition font-medium">
                 <i class="fas fa-images mr-2"></i><?= t('admin_memes') ?>
             </a>
+            <a href="/admin?action=settings" class="px-6 py-2 <?= $action === 'settings' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border border-gray-300' ?> rounded-lg hover:bg-blue-600 hover:text-white transition font-medium">
+                <i class="fas fa-cog mr-2"></i><?= t('admin_settings') ?>
+            </a>
         </div>
 
         <?php if ($action === 'dashboard'): ?>
@@ -98,7 +110,7 @@ require 'templates/header.php';
             </div>
 
             <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Memes</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4"><?= t('admin_recent_memes') ?></h2>
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-gray-100 border-b">
@@ -270,6 +282,64 @@ require 'templates/header.php';
                         </tbody>
                     </table>
                 </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($action === 'settings'): ?>
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6"><?= t('admin_settings') ?></h2>
+                
+                <?php if (isset($settingsMessage)): ?>
+                    <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-600 rounded-lg">
+                        <p class="text-green-700 flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i>
+                            <?= $settingsMessage ?>
+                        </p>
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" class="space-y-6">
+                    <input type="hidden" name="action" value="save_settings">
+
+                    <div>
+                        <label for="site_name" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-globe mr-2 text-blue-600"></i><?= t('admin_site_name') ?>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="site_name" 
+                            id="site_name"
+                            value="<?= htmlspecialchars(getSiteName()) ?>"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                            placeholder="Pixco"
+                            required
+                        >
+                        <p class="text-gray-500 text-xs mt-1"><?= t('admin_site_name_hint') ?></p>
+                    </div>
+
+                    <div>
+                        <label for="default_language" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-language mr-2 text-blue-600"></i><?= t('admin_default_language') ?>
+                        </label>
+                        <select 
+                            name="default_language" 
+                            id="default_language"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                        >
+                            <option value="id" <?= getDefaultLanguage() === 'id' ? 'selected' : '' ?>>Indonesia</option>
+                            <option value="en" <?= getDefaultLanguage() === 'en' ? 'selected' : '' ?>>English</option>
+                        </select>
+                        <p class="text-gray-500 text-xs mt-1"><?= t('admin_default_language_hint') ?></p>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-200">
+                        <button 
+                            type="submit" 
+                            class="bg-gradient-to-r from-blue-600 to-blue-800 text-white font-bold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-900 transition duration-300">
+                            <i class="fas fa-save mr-2"></i><?= t('admin_save_settings') ?>
+                        </button>
+                    </div>
+                </form>
             </div>
         <?php endif; ?>
     </div>

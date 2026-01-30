@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/i18n.php';
+require_once __DIR__ . '/includes/config.php';
 
 redirectIfNotLoggedIn();
 
@@ -41,7 +42,7 @@ if ($meme_id && in_array($type, ['upvote', 'downvote'], true)) {
 require_once __DIR__ . '/templates/header.php';
 ?>
 
-<title><?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?> - Pixco</title>
+<title><?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?> - <?= getSiteName() ?></title>
 
 <div class="min-h-screen py-12 px-4">
     <div class="container mx-auto max-w-4xl">
@@ -59,9 +60,9 @@ require_once __DIR__ . '/templates/header.php';
                 <?= htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8') ?>
             </h1>
             <div class="flex justify-center gap-6 mt-4">
-                <span class="text-gray-600"><i class="fas fa-images text-blue-600 mr-2"></i><?= count($memes) ?> Meme</span>
+                <span class="text-gray-600"><i class="fas fa-images text-blue-600 mr-2"></i><?= count($memes) ?> <?= t('profile_memes_count') ?></span>
                 <?php if ($user['id'] === $_SESSION['user_id']): ?>
-                    <a href="/settings" class="text-blue-600 hover:text-blue-800"><i class="fas fa-cog mr-2"></i>Edit Profil</a>
+                    <a href="/settings" class="text-blue-600 hover:text-blue-800"><i class="fas fa-cog mr-2"></i><?= t('profile_edit_profile') ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -106,7 +107,7 @@ require_once __DIR__ . '/templates/header.php';
                 <?php else: ?>
                     <div class="col-span-full text-center py-12">
                         <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-600 text-lg"><?= t('profile_memes') ?> belum ada</p>
+                        <p class="text-gray-600 text-lg"><?= t('profile_no_memes') ?></p>
                     </div>
                 <?php endif; ?>
             </div>

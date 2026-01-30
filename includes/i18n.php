@@ -3,9 +3,12 @@
 
 session_start();
 
+// Load configuration
+$config = require __DIR__ . '/../config.php';
+
 // Default language
 $supportedLanguages = ['en', 'id'];
-$defaultLanguage = 'id';
+$defaultLanguage = $config['default_language'] ?? 'id';
 
 // Get language from session, cookie, or parameter
 $lang = $defaultLanguage;

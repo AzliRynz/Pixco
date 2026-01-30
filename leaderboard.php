@@ -2,6 +2,7 @@
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/i18n.php';
+require_once __DIR__ . '/includes/config.php';
 
 $query = "
     SELECT u.id, u.username, u.avatar, COUNT(m.id) AS total_memes, COALESCE(SUM(m.votes), 0) AS total_votes
@@ -23,7 +24,7 @@ require_once __DIR__ . '/templates/header.php';
         <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
             <i class="fas fa-trophy text-yellow-500 mr-3"></i><?= t('leaderboard_title') ?>
         </h1>
-        <p class="text-gray-600 text-lg">Lihat kontributor meme terbaik di Pixco</p>
+        <p class="text-gray-600 text-lg"><?= t('leaderboard_view_best') ?></p>
     </div>
 
     <div class="bg-white shadow-2xl rounded-xl overflow-hidden">

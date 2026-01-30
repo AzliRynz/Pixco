@@ -1,4 +1,7 @@
-<?php require_once 'includes/i18n.php'; ?>
+<?php 
+require_once 'includes/i18n.php';
+require_once 'includes/config.php';
+?>
 <!DOCTYPE html>
 <html lang="<?= getLang() ?>">
 <head>
@@ -38,7 +41,7 @@
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <a href="/" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent flex items-center gap-2">
-                    <i class="fas fa-smile text-blue-600"></i> <?= t('brand_name') ?>
+                    <i class="fas fa-smile text-blue-600"></i> <?= getSiteName() ?>
                 </a>
                 
                 <div class="lg:hidden">

@@ -2,6 +2,7 @@
 require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
+require 'includes/config.php';
 
 redirectIfNotLoggedIn();
 
@@ -53,9 +54,9 @@ $stmt = $pdo->prepare("SELECT comments.*, users.username, users.avatar
                        WHERE comments.meme_id = ?");
 require 'templates/header.php';
 ?>
-<title><?= t('dashboard') ?> - Pixco</title>
+<title><?= t('dashboard') ?> - <?= getSiteName() ?></title>
 <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2"><?= t('dashboard') ?></h1>
-<p class="text-gray-600 mb-8 text-lg">Temukan meme terbaik dari komunitas lokal</p>
+<p class="text-gray-600 mb-8 text-lg"><?= t('dashboard_find_best') ?></p>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
     <?php if (count($memes) > 0): ?>
@@ -108,7 +109,7 @@ require 'templates/header.php';
     <?php else: ?>
         <div class="col-span-full text-center py-16">
             <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
-            <p class="text-gray-600 text-xl"><?= t('no_memes') ?? 'No memes yet. Start uploading!' ?></p>
+            <p class="text-gray-600 text-xl"><?= t('dashboard_no_memes') ?></p>
         </div>
     <?php endif; ?>
 </div>
@@ -154,7 +155,7 @@ require 'templates/header.php';
         commentList.innerHTML = '';
 
         if (comments.length === 0) {
-            commentList.innerHTML = '<li class="text-sm text-gray-500 italic">No comments yet</li>';
+            commentList.innerHTML = '<li class="text-sm text-gray-500 italic"><?= t('dashboard_no_comments') ?></li>';
         } else {
             comments.forEach(comment => {
                 const li = document.createElement('li');

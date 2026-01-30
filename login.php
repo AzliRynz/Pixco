@@ -2,6 +2,7 @@
 require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
+require 'includes/config.php';
 require 'vendor/autoload.php';
 
 if (isLoggedIn()) {
@@ -11,7 +12,6 @@ if (isLoggedIn()) {
 
 $error = '';
 
-// Login manual menggunakan username dan password
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
@@ -40,9 +40,9 @@ require 'templates/header.php';
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center gap-2 mb-4">
                 <div class="text-5xl text-blue-600"><i class="fas fa-smile"></i></div>
-                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Pixco</h1>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"><?= getSiteName() ?></h1>
             </div>
-            <p class="text-gray-600"><?= t('login_title') ?> untuk berbagi meme terbaik</p>
+            <p class="text-gray-600"><?= t('login_title') ?> <?= t('login_share_meme') ?></p>
         </div>
 
         <?php if ($error): ?>
@@ -110,7 +110,7 @@ require 'templates/header.php';
         <div class="mt-8 p-4 bg-blue-50 border-l-4 border-blue-600 rounded-lg">
             <p class="text-blue-700 text-sm flex items-start gap-2">
                 <i class="fas fa-info-circle mt-1"></i>
-                <span>Platform Pixco adalah tempat terbaik untuk berbagi dan menemukan meme lokal yang seru!</span>
+                <span><?= t('login_platform_desc') ?></span>
             </p>
         </div>
     </div>

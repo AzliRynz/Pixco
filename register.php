@@ -2,6 +2,7 @@
 require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
+require 'includes/config.php';
 
 $error = '';
 $success = '';
@@ -48,7 +49,7 @@ require 'templates/header.php';
         <div class="text-center mb-8">
             <div class="inline-flex items-center justify-center gap-2 mb-4">
                 <div class="text-5xl text-blue-600"><i class="fas fa-smile"></i></div>
-                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">Pixco</h1>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"><?= getSiteName() ?></h1>
             </div>
             <p class="text-gray-600"><?= t('register_title') ?> <?= t('register_and_start') ?></p>
         </div>

@@ -2,6 +2,7 @@
 require 'includes/db.php';
 require 'includes/auth.php';
 require 'includes/i18n.php';
+require 'includes/config.php';
 
 redirectIfNotLoggedIn();
 
@@ -14,13 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validation
     if (empty($title)) {
-        $error = 'Judul meme tidak boleh kosong';
+        $error = t('upload_error_empty_title');
     } elseif ($image['error'] !== UPLOAD_ERR_OK) {
-        $error = 'Gagal mengunggah gambar';
+        $error = t('upload_error_upload_failed');
     } elseif (!in_array($image['type'], ['image/jpeg', 'image/png', 'image/gif', 'image/webp'])) {
-        $error = 'Format gambar tidak didukung. Gunakan JPG, PNG, GIF, atau WebP';
+        $error = t('upload_error_unsupported_format');
     } elseif ($image['size'] > 5 * 1024 * 1024) {
-        $error = 'Ukuran gambar maksimal 5MB';
+        $error = t('upload_error_size_limit');
     } else {
         $ext = pathinfo($image['name'], PATHINFO_EXTENSION);
         $filename = uniqid() . '.' . $ext;
@@ -32,10 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (move_uploaded_file($image['tmp_name'], "uploads/$filename")) {
             $stmt = $pdo->prepare("INSERT INTO memes (user_id, title, image) VALUES (?, ?, ?)");
             $stmt->execute([$_SESSION['user_id'], $title, $filename]);
-            $success = 'Meme berhasil diupload!';
+            $success = t('upload_success');
             header('refresh:2; url=/dashboard');
         } else {
-            $error = 'Gagal menyimpan gambar';
+            $error = t('upload_error_save_failed');
         }
     }
 }
@@ -48,7 +49,7 @@ require 'templates/header.php';
             <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
                 <i class="fas fa-images text-blue-600 mr-3"></i><?= t('upload_title') ?>
             </h1>
-            <p class="text-gray-600">Bagikan meme terbaik Anda dengan komunitas Pixco</p>
+            <p class="text-gray-600"><?= t('upload_share_desc') ?></p>
         </div>
 
         <?php if ($error): ?>
@@ -82,7 +83,7 @@ require 'templates/header.php';
                     placeholder="<?= t('upload_title_placeholder') ?>"
                     required
                 >
-                <p class="text-gray-500 text-xs mt-1">Buat judul yang menarik dan deskriptif</p>
+                <p class="text-gray-500 text-xs mt-1"><?= t('upload_title_hint') ?></p>
             </div>
 
             <div>
@@ -97,14 +98,14 @@ require 'templates/header.php';
                         accept="image/*" 
                         class="hidden" 
                         required
-                        onchange="document.getElementById('filename').textContent = this.files[0] ? this.files[0].name : 'Tidak ada file dipilih'"
+                        onchange="document.getElementById('filename').textContent = this.files[0] ? this.files[0].name : '<?= t('upload_no_file') ?>'"
                     >
                     <label for="image" class="block border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-8 text-center cursor-pointer hover:bg-blue-100 transition">
                         <i class="fas fa-cloud-upload-alt text-5xl text-blue-400 mb-3"></i>
-                        <p class="text-gray-700 font-semibold mb-1">Klik atau seret gambar ke sini</p>
-                        <p class="text-gray-500 text-sm">Maksimal 5MB • JPG, PNG, GIF, WebP</p>
+                        <p class="text-gray-700 font-semibold mb-1"><?= t('upload_drag_drop') ?></p>
+                        <p class="text-gray-500 text-sm"><?= t('upload_max_size') ?></p>
                     </label>
-                    <p id="filename" class="text-gray-600 text-sm mt-2">Tidak ada file dipilih</p>
+                    <p id="filename" class="text-gray-600 text-sm mt-2"><?= t('upload_no_file') ?></p>
                 </div>
             </div>
 
@@ -121,29 +122,29 @@ require 'templates/header.php';
                     <div class="w-full border-t-2 border-gray-200"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">atau</span>
+                    <span class="px-2 bg-white text-gray-500"><?= t('upload_or') ?></span>
                 </div>
             </div>
 
             <div>
                 <a href="/dashboard" class="block text-center py-3 border-2 border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition">
-                    <i class="fas fa-times mr-2"></i> Batal
+                    <i class="fas fa-times mr-2"></i> <?= t('upload_cancel') ?>
                 </a>
             </div>
         </form>
 
         <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-blue-50 border-l-4 border-blue-600 rounded-lg p-4">
-                <p class="text-blue-700 font-semibold text-sm mb-1"><i class="fas fa-lightbulb mr-2"></i>Tip 1</p>
-                <p class="text-blue-600 text-sm">Pilih meme yang lucu dan relevan dengan budaya lokal</p>
+                <p class="text-blue-700 font-semibold text-sm mb-1"><i class="fas fa-lightbulb mr-2"></i><?= t('upload_tip_1_title') ?></p>
+                <p class="text-blue-600 text-sm"><?= t('upload_tip_1_desc') ?></p>
             </div>
             <div class="bg-green-50 border-l-4 border-green-600 rounded-lg p-4">
-                <p class="text-green-700 font-semibold text-sm mb-1"><i class="fas fa-lightbulb mr-2"></i>Tip 2</p>
-                <p class="text-green-600 text-sm">Berikan judul yang menarik untuk mendapat lebih banyak vote</p>
+                <p class="text-green-700 font-semibold text-sm mb-1"><i class="fas fa-lightbulb mr-2"></i><?= t('upload_tip_2_title') ?></p>
+                <p class="text-green-600 text-sm"><?= t('upload_tip_2_desc') ?></p>
             </div>
             <div class="bg-purple-50 border-l-4 border-purple-600 rounded-lg p-4">
-                <p class="text-purple-700 font-semibold text-sm mb-1"><i class="fas fa-lightbulb mr-2"></i>Tip 3</p>
-                <p class="text-purple-600 text-sm">Gunakan gambar berkualitas tinggi untuk hasil terbaik</p>
+                <p class="text-purple-700 font-semibold text-sm mb-1"><i class="fas fa-lightbulb mr-2"></i><?= t('upload_tip_3_title') ?></p>
+                <p class="text-purple-600 text-sm"><?= t('upload_tip_3_desc') ?></p>
             </div>
         </div>
     </div>
