@@ -1,2 +1,13 @@
 uploads/*.png
 uploads/avatars/*.png
+vendor/*
+node_modules/
+.DS_Store
+.env
+.idea/
+.vscode/
+*.log
+*.cache
+*.tmp
+*.bak
+*.swp

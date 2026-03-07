@@ -4,6 +4,7 @@ require 'includes/auth.php';
 require 'includes/i18n.php';
 require 'includes/config.php';
 require 'includes/security.php';
+require 'includes/email.php';
 
 if (isLoggedIn()) {
     header('Location: /dashboard');
@@ -58,11 +59,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     } else {
                         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-                        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'user')");
-                        $stmt->execute([$username, $email, $passwordHash]);
+                        $verificationToken = bin2hex(random_bytes(32));
+                        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role, email_verification_token) VALUES (?, ?, ?, 'user', ?)");
+                        $stmt->execute([$username, $email, $passwordHash, $verificationToken]);
                         
-                        $success = t('register_success');
-                        header('refresh:2; url=login');
+                        // Send verification email
+                        if (sendVerificationEmail($email, $verificationToken)) {
+                            $success = t('email_verification_sent');
+                        } else {
+                            $success = t('register_success') . ' ' . t('email_verification_sent');
+                        }
+                        header('refresh:3; url=login');
                     }
                 } catch (PDOException $e) {
                     $error = t('register_error_default');
@@ -194,7 +201,12 @@ require 'templates/header.php';
                 <div class="px-3 text-gray-500 text-sm"><?= t('register_or') ?></div>
                 <div class="flex-1 border-t-2 border-gray-200"></div>
             </div>
-
+            <div class="space-y-3">
+                <a href="/google-login.php" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition duration-300">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" class="w-5 h-5">
+                    <?= t('register_with_google') ?>
+                </a>
+            </div>
             <div class="text-center">
                 <p class="text-gray-600 text-sm">
                     <?= t('register_have_account') ?>

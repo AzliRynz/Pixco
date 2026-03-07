@@ -47,13 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception('Avatar file size must not exceed 2MB');
                     }
 
+                    // Get safe extension
+                    $ext = getSafeExtension($avatar['type'], $avatar['name']);
+                    if (!$ext) {
+                        throw new Exception(t('settings_invalid_image'));
+                    }
+
                     // Create avatars directory if it doesn't exist
                     $avatarsDir = __DIR__ . '/uploads/avatars';
                     if (!is_dir($avatarsDir)) {
                         mkdir($avatarsDir, 0755, true);
                     }
 
-                    $avatar_path = 'uploads/avatars/' . $_SESSION['user_id'] . '-' . time() . '.' . pathinfo($avatar['name'], PATHINFO_EXTENSION);
+                    $avatar_path = 'uploads/avatars/' . $_SESSION['user_id'] . '-' . time() . '.' . $ext;
                     if (!move_uploaded_file($avatar['tmp_name'], __DIR__ . '/' . $avatar_path)) {
                         throw new Exception(t('settings_upload_failed'));
                     }
@@ -113,6 +119,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = $e->getMessage();
                 $activeTab = 'password';
             }
+
+        } elseif ($action === 'enable_2fa') {
+            try {
+                $code = $_POST['code'] ?? '';
+                $secret = $_POST['secret'] ?? '';
+
+                if (empty($code) || empty($secret)) {
+                    throw new Exception('Code and secret are required');
+                }
+
+                if (!verify2FACode($secret, $code)) {
+                    throw new Exception(t('twofa_invalid'));
+                }
+
+                $stmt = $pdo->prepare("UPDATE users SET twofa_secret = ?, twofa_enabled = TRUE WHERE id = ?");
+                $stmt->execute([$secret, $_SESSION['user_id']]);
+
+                $success = t('twofa_enabled');
+                $activeTab = '2fa';
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+                $activeTab = '2fa';
+            }
+
+        } elseif ($action === 'disable_2fa') {
+            try {
+                $code = $_POST['code'] ?? '';
+
+                if (empty($code)) {
+                    throw new Exception('2FA code is required');
+                }
+
+                $stmt = $pdo->prepare("SELECT twofa_secret FROM users WHERE id = ?");
+                $stmt->execute([$_SESSION['user_id']]);
+                $user = $stmt->fetch();
+
+                if (!verify2FACode($user['twofa_secret'], $code)) {
+                    throw new Exception(t('twofa_invalid'));
+                }
+
+                $stmt = $pdo->prepare("UPDATE users SET twofa_secret = NULL, twofa_enabled = FALSE WHERE id = ?");
+                $stmt->execute([$_SESSION['user_id']]);
+
+                $success = t('twofa_disabled');
+                $activeTab = '2fa';
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+                $activeTab = '2fa';
+            }
         }
     }
 }
@@ -145,6 +200,9 @@ require 'templates/header.php';
                             </a>
                             <a href="/settings?tab=password" class="block px-4 py-3 rounded-lg transition <?= $activeTab === 'password' ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' : 'text-gray-700 hover:bg-gray-100' ?>">
                                 <i class="fas fa-lock mr-2"></i><?= t('settings_password') ?? 'Password' ?>
+                            </a>
+                            <a href="/settings?tab=2fa" class="block px-4 py-3 rounded-lg transition <?= $activeTab === '2fa' ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600' : 'text-gray-700 hover:bg-gray-100' ?>">
+                                <i class="fas fa-shield-alt mr-2"></i>2FA
                             </a>
                         </nav>
                     </div>
@@ -315,6 +373,95 @@ require 'templates/header.php';
                         </form>
                     </div>
                 <?php endif; ?>
+
+                <!-- 2FA Tab -->
+                <?php if ($activeTab === '2fa'): ?>
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                            <i class="fas fa-shield-alt mr-2 text-blue-600"></i><?= t('twofa_title') ?>
+                        </h2>
+
+                        <?php
+                        $stmt = $pdo->prepare("SELECT twofa_enabled, twofa_secret FROM users WHERE id = ?");
+                        $stmt->execute([$_SESSION['user_id']]);
+                        $user2fa = $stmt->fetch();
+                        ?>
+
+                        <?php if (!$user2fa['twofa_enabled']): ?>
+                            <!-- Enable 2FA -->
+                            <div class="space-y-6">
+                                <p class="text-gray-600">Add an extra layer of security to your account by enabling Two-Factor Authentication.</p>
+                                
+                                <div class="bg-yellow-50 border-l-4 border-yellow-600 rounded-lg p-4">
+                                    <p class="text-yellow-700 text-sm">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Make sure you have an authenticator app installed (like Google Authenticator, Authy, or Microsoft Authenticator).
+                                    </p>
+                                </div>
+
+                                <button type="button" onclick="showEnable2FA()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                                    <i class="fas fa-plus mr-2"></i><?= t('twofa_enable') ?>
+                                </button>
+                            </div>
+
+                            <!-- Enable 2FA Form (hidden initially) -->
+                            <div id="enable2faForm" class="hidden space-y-6 mt-6">
+                                <div class="bg-gray-50 rounded-lg p-6">
+                                    <h3 class="text-lg font-semibold mb-4">Setup Instructions</h3>
+                                    <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                                        <li>Install an authenticator app on your phone</li>
+                                        <li>Scan the QR code below with your app</li>
+                                        <li>Enter the 6-digit code from your app</li>
+                                    </ol>
+                                </div>
+
+                                <div class="text-center">
+                                    <div id="qrcode" class="inline-block bg-white p-4 rounded-lg border-2 border-gray-200"></div>
+                                    <p class="text-xs text-gray-500 mt-2">Or enter this code manually: <span id="secretCode" class="font-mono"></span></p>
+                                </div>
+
+                                <form method="POST" class="space-y-4">
+                                    <input type="hidden" name="action" value="enable_2fa">
+                                    <input type="hidden" name="secret" id="secretInput">
+                                    <?= csrfTokenInput() ?>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2"><?= t('twofa_code') ?></label>
+                                        <input type="text" name="code" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none" maxlength="6" required>
+                                    </div>
+
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                                        <i class="fas fa-check mr-2"></i><?= t('twofa_verify') ?>
+                                    </button>
+                                </form>
+                            </div>
+                        <?php else: ?>
+                            <!-- Disable 2FA -->
+                            <div class="space-y-6">
+                                <div class="bg-green-50 border-l-4 border-green-600 rounded-lg p-4">
+                                    <p class="text-green-700">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        Two-Factor Authentication is currently enabled for your account.
+                                    </p>
+                                </div>
+
+                                <form method="POST" class="space-y-4">
+                                    <input type="hidden" name="action" value="disable_2fa">
+                                    <?= csrfTokenInput() ?>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Enter your current 2FA code to disable</label>
+                                        <input type="text" name="code" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none" maxlength="6" required>
+                                    </div>
+
+                                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition">
+                                        <i class="fas fa-times mr-2"></i><?= t('twofa_disable') ?>
+                                    </button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -345,6 +492,17 @@ require 'templates/header.php';
                 }
             });
         });
+    }
+
+    // 2FA functions
+    function showEnable2FA() {
+        const secret = '<?= generate2FASecret() ?>';
+        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent('<?= get2FAQRCodeUrl(generate2FASecret(), $_SESSION['username']) ?>'.replace('SECRET_PLACEHOLDER', secret));
+        
+        document.getElementById('qrcode').innerHTML = '<img src="' + qrUrl + '" alt="QR Code">';
+        document.getElementById('secretCode').textContent = secret;
+        document.getElementById('secretInput').value = secret;
+        document.getElementById('enable2faForm').classList.remove('hidden');
     }
 </script>
 

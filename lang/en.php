@@ -147,6 +147,29 @@ return [
     'admin_default_language_hint' => 'Default language for new visitors',
     'admin_save_settings' => 'Save Settings',
     'admin_settings_saved' => 'Settings saved successfully!',
+
+    'email_verification_subject' => 'Verify Your Email - Pixco',
+    'email_verification_body' => 'Welcome to %s! Please verify your email by clicking the link below:<br><br><a href="%s">Verify Email</a><br><br>If you did not register, please ignore this email.',
+    'email_verification_success' => 'Email verified successfully! You can now login.',
+    'email_verification_failed' => 'Invalid or expired verification token.',
+    'email_verification_sent' => 'Verification email sent. Please check your inbox.',
+    'email_not_verified' => 'Please verify your email before logging in.',
+
+    'twofa_title' => 'Two-Factor Authentication',
+    'twofa_enable' => 'Enable 2FA',
+    'twofa_disable' => 'Disable 2FA',
+    'twofa_secret' => 'Secret Key',
+    'twofa_qr' => 'Scan this QR code with your authenticator app',
+    'twofa_code' => 'Enter 6-digit code',
+    'twofa_verify' => 'Verify',
+    'twofa_enabled' => '2FA enabled successfully',
+    'twofa_disabled' => '2FA disabled successfully',
+    'twofa_invalid' => 'Invalid 2FA code',
+    'twofa_required' => '2FA code required',
+
+    'login_with_google' => 'Login with Google',
+    'register_with_google' => 'Register with Google',
+];
     
     'leaderboard_view_best' => 'View the best meme contributors on Pixco',
     
