@@ -52,6 +52,35 @@ function isStrongPassword($password) {
     return true;
 }
 
+// Get safe file extension based on MIME type
+function getSafeExtension($mimeType, $originalName) {
+    $mimeToExt = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp'
+    ];
+    
+    if (!isset($mimeToExt[$mimeType])) {
+        return false;
+    }
+    
+    // Optionally, validate that original extension matches
+    $originalExt = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $expectedExt = $mimeToExt[$mimeType];
+    
+    // Allow common variations
+    if ($mimeType === 'image/jpeg' && in_array($originalExt, ['jpg', 'jpeg'])) {
+        return $expectedExt;
+    }
+    
+    if ($originalExt === $expectedExt) {
+        return $expectedExt;
+    }
+    
+    return false;
+}
+
 // Rate limiting helper
 function checkRateLimit($key, $max_attempts = 5, $time_window = 300) {
     $cache_key = 'rate_limit_' . $key;
@@ -84,5 +113,23 @@ function getRateLimitRemaining($key, $max_attempts = 5) {
     }
     
     return max(0, $max_attempts - $_SESSION[$cache_key]['attempts']);
+}
+
+// 2FA Functions
+use PragmaRX\Google2FA\Google2FA;
+
+function generate2FASecret() {
+    $google2fa = new Google2FA();
+    return $google2fa->generateSecretKey();
+}
+
+function get2FAQRCodeUrl($secret, $username, $issuer = 'Pixco') {
+    $google2fa = new Google2FA();
+    return $google2fa->getQRCodeUrl($issuer, $username, $secret);
+}
+
+function verify2FACode($secret, $code) {
+    $google2fa = new Google2FA();
+    return $google2fa->verifyKey($secret, $code);
 }
 ?>

@@ -148,6 +148,29 @@ return [
     'admin_default_language_hint' => 'Bahasa default untuk pengunjung baru',
     'admin_save_settings' => 'Simpan Pengaturan',
     'admin_settings_saved' => 'Pengaturan berhasil disimpan!',
+
+    'email_verification_subject' => 'Verifikasi Email Anda - Pixco',
+    'email_verification_body' => 'Selamat datang di %s! Silakan verifikasi email Anda dengan mengklik tautan di bawah:<br><br><a href="%s">Verifikasi Email</a><br><br>Jika Anda tidak mendaftar, abaikan email ini.',
+    'email_verification_success' => 'Email berhasil diverifikasi! Anda sekarang dapat login.',
+    'email_verification_failed' => 'Token verifikasi tidak valid atau kadaluarsa.',
+    'email_verification_sent' => 'Email verifikasi dikirim. Periksa kotak masuk Anda.',
+    'email_not_verified' => 'Silakan verifikasi email Anda sebelum login.',
+
+    'twofa_title' => 'Otentikasi Dua Faktor',
+    'twofa_enable' => 'Aktifkan 2FA',
+    'twofa_disable' => 'Nonaktifkan 2FA',
+    'twofa_secret' => 'Kunci Rahasia',
+    'twofa_qr' => 'Pindai kode QR ini dengan aplikasi autentikator Anda',
+    'twofa_code' => 'Masukkan kode 6 digit',
+    'twofa_verify' => 'Verifikasi',
+    'twofa_enabled' => '2FA berhasil diaktifkan',
+    'twofa_disabled' => '2FA berhasil dinonaktifkan',
+    'twofa_invalid' => 'Kode 2FA tidak valid',
+    'twofa_required' => 'Kode 2FA diperlukan',
+
+    'login_with_google' => 'Login dengan Google',
+    'register_with_google' => 'Daftar dengan Google',
+];
     
     'leaderboard_view_best' => 'Lihat kontributor meme terbaik di Pixco',
     

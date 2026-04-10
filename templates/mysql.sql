@@ -26,6 +26,10 @@ CREATE TABLE users (
     avatar VARCHAR(255) DEFAULT NULL,
     role ENUM('user', 'admin') DEFAULT 'user',
     is_banned BOOLEAN DEFAULT FALSE,
+    email_verified BOOLEAN DEFAULT FALSE,
+    email_verification_token VARCHAR(255) DEFAULT NULL,
+    twofa_secret VARCHAR(255) DEFAULT NULL,
+    twofa_enabled BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

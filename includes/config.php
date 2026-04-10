@@ -1,13 +1,37 @@
 <?php
 // Configuration helper functions
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
 $_config_cache = null;
 
 function getConfig($key = null, $default = null) {
     global $_config_cache;
     
     if ($_config_cache === null) {
-        $_config_cache = require __DIR__ . '/../config.php';
+        $_config_cache = [
+            'db_host' => $_ENV['DB_HOST'] ?? 'localhost',
+            'db_name' => $_ENV['DB_NAME'] ?? 'pixco',
+            'db_user' => $_ENV['DB_USER'] ?? 'root',
+            'db_pass' => $_ENV['DB_PASS'] ?? '',
+            'smtp_host' => $_ENV['SMTP_HOST'] ?? 'smtp.gmail.com',
+            'smtp_username' => $_ENV['SMTP_USERNAME'] ?? '',
+            'smtp_password' => $_ENV['SMTP_PASSWORD'] ?? '',
+            'smtp_port' => $_ENV['SMTP_PORT'] ?? 587,
+            'smtp_from_email' => $_ENV['SMTP_FROM_EMAIL'] ?? 'noreply@pixco.com',
+            'smtp_from_name' => $_ENV['SMTP_FROM_NAME'] ?? 'Pixco',
+            'google_client_id' => $_ENV['GOOGLE_CLIENT_ID'] ?? '',
+            'google_client_secret' => $_ENV['GOOGLE_CLIENT_SECRET'] ?? '',
+            'google_redirect_uri' => $_ENV['GOOGLE_REDIRECT_URI'] ?? 'http://localhost/google-login.php',
+            'site_name' => $_ENV['SITE_NAME'] ?? 'Pixco',
+            'default_language' => $_ENV['DEFAULT_LANGUAGE'] ?? 'id',
+            'session_secure' => filter_var($_ENV['SESSION_SECURE'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'session_httponly' => filter_var($_ENV['SESSION_HTTPONLY'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'session_samesite' => $_ENV['SESSION_SAMESITE'] ?? 'Strict',
+        ];
     }
     
     if ($key === null) {

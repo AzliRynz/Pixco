@@ -23,20 +23,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($image['size'] > 5 * 1024 * 1024) {
         $error = t('upload_error_size_limit');
     } else {
-        $ext = pathinfo($image['name'], PATHINFO_EXTENSION);
-        $filename = uniqid() . '.' . $ext;
-        
-        if (!is_dir('uploads')) {
-            mkdir('uploads', 0755, true);
-        }
-        
-        if (move_uploaded_file($image['tmp_name'], "uploads/$filename")) {
-            $stmt = $pdo->prepare("INSERT INTO memes (user_id, title, image) VALUES (?, ?, ?)");
-            $stmt->execute([$_SESSION['user_id'], $title, $filename]);
-            $success = t('upload_success');
-            header('refresh:2; url=/dashboard');
+        // Get safe extension
+        $ext = getSafeExtension($image['type'], $image['name']);
+        if (!$ext) {
+            $error = t('upload_error_unsupported_format');
         } else {
-            $error = t('upload_error_save_failed');
+            $filename = uniqid() . '.' . $ext;
+            
+            if (!is_dir('uploads')) {
+                mkdir('uploads', 0755, true);
+            }
+            
+            if (move_uploaded_file($image['tmp_name'], "uploads/$filename")) {
+                $stmt = $pdo->prepare("INSERT INTO memes (user_id, title, image) VALUES (?, ?, ?)");
+                $stmt->execute([$_SESSION['user_id'], $title, $filename]);
+                $success = t('upload_success');
+                header('refresh:2; url=/dashboard');
+            } else {
+                $error = t('upload_error_save_failed');
+            }
         }
     }
 }

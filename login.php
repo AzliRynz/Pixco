@@ -36,17 +36,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user = $stmt->fetch();
 
                 if ($user && !$user['is_banned'] && password_verify($password, $user['password'])) {
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['username'] = $user['username'];
-                    $_SESSION['avatar'] = $user['avatar'];
-                    $_SESSION['role'] = $user['role'];
-                    $_SESSION['login_method'] = 'manual';
-                    
-                    // Reset rate limit on successful login
-                    $_SESSION['rate_limit_login_' . $_SERVER['REMOTE_ADDR']] = ['attempts' => 0, 'first_attempt' => time()];
-                    
-                    header('Location: /dashboard');
-                    exit();
+                    if (!$user['email_verified']) {
+                        $error = t('email_not_verified');
+                    } elseif ($user['twofa_enabled']) {
+                        // Store temp user ID and redirect to 2FA
+                        $_SESSION['temp_user_id'] = $user['id'];
+                        header('Location: /2fa-verify');
+                        exit();
+                    } else {
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['avatar'] = $user['avatar'];
+                        $_SESSION['role'] = $user['role'];
+                        $_SESSION['login_method'] = 'manual';
+                        
+                        // Reset rate limit on successful login
+                        $_SESSION['rate_limit_login_' . $_SERVER['REMOTE_ADDR']] = ['attempts' => 0, 'first_attempt' => time()];
+                        
+                        header('Location: /dashboard');
+                        exit();
+                    }
                 } else {
                     $error = t('login_error');
                 }
@@ -132,6 +141,13 @@ require 'templates/header.php';
                 <div class="flex-1 border-t-2 border-gray-200"></div>
                 <div class="px-3 text-gray-500 text-sm">or</div>
                 <div class="flex-1 border-t-2 border-gray-200"></div>
+            </div>
+
+            <div class="space-y-3">
+                <a href="/google-login.php" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition duration-300">
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" class="w-5 h-5">
+                    <?= t('login_with_google') ?>
+                </a>
             </div>
 
             <div class="text-center">
